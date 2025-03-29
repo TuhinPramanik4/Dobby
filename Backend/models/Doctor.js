@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const doctorSchema = new mongoose.Schema({
     doctorName: {
@@ -12,8 +12,13 @@ const doctorSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: 'doctor'  // you can set default role as doctor
+        default: 'doctor'
+    },
+    password: {
+        type: String,
+        required: true
     }
 });
 
-module.exports = mongoose.model('Doctor', doctorSchema);
+const Doctor = mongoose.model('Doctor', doctorSchema);
+export default Doctor;

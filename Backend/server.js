@@ -9,12 +9,15 @@ import cookieParser from 'cookie-parser';
 import User from './models/User.js';
 import cors from "cors";
 import cron from 'node-cron';
+import Doctor from './models/Doctor.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import twilio from 'twilio';
 
 
 dotenv.config();
 const app = express();
-
+const JWT_SECRET = process.env.JWT_token_Secreat;
 // ✅ Google Gemini API Setup
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -62,7 +65,107 @@ const authToken =  process.env.TWILIO_AUTH_TOKEN ;
 const twilioClient = twilio(accountSid, authToken);
 const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
 
+const patientSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    mobile: { type: String, required: true },
+    age: { type: Number, required: true },
+    symptoms: { type: String, required: true },
+    gender:{type: String ,  required:true}
+  });
+  
+  // Create Patient Model
+  const Patient = mongoose.model("Patient", patientSchema);
+
 // Routes
+app.delete("/api/patients/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log("Received ID for deletion:", id); // Debugging
+
+        const deletedPatient = await Patient.findByIdAndDelete(id);
+        if (!deletedPatient) {
+            return res.status(404).json({ message: "Patient not found" });
+        }
+        
+        res.json({ message: "Patient deleted successfully", patient: deletedPatient });
+    } catch (error) {
+        console.error("Error deleting patient:", error);
+        res.status(500).json({ message: "Error deleting patient", error: error.message });
+    }
+});
+
+
+app.post("/api/patients", async (req, res) => {
+    try {
+      const newPatient = new Patient(req.body);
+      await newPatient.save();
+      res.status(201).json({ message: "Patient record saved successfully!" });
+    } catch (error) {
+      res.status(500).json({ message: "Error saving patient record", error });
+    }
+  });
+  
+  // Get all patient records
+  app.get("/api/patients", async (req, res) => {
+    try {
+      const patients = await Patient.find();
+      res.status(200).json(patients);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching patient records", error });
+    }
+  });
+
+app.post('/api/signup', async (req, res) => {
+    const { doctorName, email, password } = req.body;
+
+    try {
+        const existingDoctor = await Doctor.findOne({ email });
+        if (existingDoctor) return res.status(400).json({ msg: 'Doctor already exists' });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const doctor = new Doctor({ doctorName, email, password: hashedPassword });
+        await doctor.save();
+
+        res.status(201).json({ msg: 'Doctor registered successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// -------------------- Sign In --------------------
+app.post('/api/signin', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const doctor = await Doctor.findOne({ email });
+        if (!doctor) return res.status(404).json({ msg: 'Doctor not found' });
+
+        const isMatch = await bcrypt.compare(password, doctor.password);
+        if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
+
+        const token = jwt.sign({ id: doctor._id }, JWT_SECRET, { expiresIn: '1d' });
+
+        res.json({ token, doctor: { id: doctor._id, doctorName: doctor.doctorName, email: doctor.email } });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// -------------------- Auth Middleware --------------------
+const auth = (req, res, next) => {
+    const token = req.header('Authorization');
+    if (!token) return res.status(401).json({ msg: 'No token, authorization denied' });
+
+    try {
+        const verified = jwt.verify(token, JWT_SECRET);
+        req.user = verified.id;
+        next();
+    } catch (err) {
+        res.status(400).json({ msg: 'Token is not valid' });
+    }
+};
+
 app.get('/get-reminders/:userId', async (req, res) => {
     try {
         const user = await User.findById(req.params.userId);
@@ -71,6 +174,15 @@ app.get('/get-reminders/:userId', async (req, res) => {
         res.json(user.reminders);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch reminders' });
+    }
+});
+app.get('/api/profile', auth, async (req, res) => {
+    try {
+        const doctor = await Doctor.findById(req.user).select('-password');
+        if (!doctor) return res.status(404).json({ msg: 'Doctor not found' });
+        res.json(doctor);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 

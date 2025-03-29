@@ -9,6 +9,10 @@ import All_Doc from './Components/All_Doc';
 import Doctor_Login from './Components/Doctor_Login';
 import Doc_Dashboard from './Components/Doc_Dashboard';
 import Chatinterface from './Components/Chatinterface';
+import Signup from './Components/Signup';
+import Signin from './Components/Signin';
+import Profile from './Components/Profile';
+import PatientForm from './Components/Books'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -24,6 +28,10 @@ function App() {
         <Route path="/doclogin" element={<Doctor_Login/>} />
         <Route path="/docdash" element={<Doc_Dashboard/>} />
         <Route path="/chat" element={<Chatinterface/>} />
+        <Route path="/signup" element={<Signup/>}/>
+        <Route path="/signin" element={<Signin/>}/>
+        <Route path="/profile" element={<Profile/>}/>
+        <Route path="/booking" element={<PatientForm/>}/>
       </Routes>
     </Router>
   )
