@@ -1,0 +1,26 @@
+{
+  "name": "dobby",
+  "version": "1.0.0",
+  "description": "Binary hackathon project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "Frontend": "cd Frontend && npm run dev",
+    "Backend": "cd Backend && npm start",
+    "start": "concurrently \"npm run Frontend\" \"npm run Backend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TuhinPramanik4/Dobby.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TuhinPramanik4/Dobby/issues"
+  },
+  "homepage": "https://github.com/TuhinPramanik4/Dobby#readme",
+  "dependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
