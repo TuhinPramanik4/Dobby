@@ -11,21 +11,42 @@ import cors from "cors";
 import cron from 'node-cron';
 import twilio from 'twilio';
 
+
 dotenv.config();
 const app = express();
 
+// ✅ Google Gemini API Setup
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// ✅ MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+}).then(() => console.log("✅ MongoDB connected"))
+  .catch(err => console.log("❌ MongoDB Error:", err));
+
+  const reminderSchema = new mongoose.Schema({
+    medicineName: String,
+    dosage: String,
+    time: String,
+    phoneNumber: String
+  });
+
+const Reminder = mongoose.model('Reminder', reminderSchema);
+
+// ✅ Middleware Setup
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(express.json());
-
-
+// ✅ Fix CORS Issue
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
     allowedHeaders: "Content-Type,Authorization"
 }));
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -35,55 +56,77 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// Twilio Setup
+const accountSid = process.env.TWILIO_ACCOUNT_SID ;
+const authToken =  process.env.TWILIO_AUTH_TOKEN ;
+const twilioClient = twilio(accountSid, authToken);
+const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
 
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-}).then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.log("❌ MongoDB Error:", err));
-
-
-// ✅ Redirect Routes
-passport.use(
-    new GoogleStrategy(
-        {
-            clientID: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: "http://localhost:8000/auth/google/callback", // Fixed callback URL
-        },
-        async (accessToken, refreshToken, profile, done) => {
-            try {
-                let user = await User.findOne({ email: profile.emails[0].value });
-                if (!user) {
-                    user = new User({
-                        name: profile.displayName,
-                        email: profile.emails[0].value,
-                        search_history: []
-                    });
-                    await user.save();
-                }
-                return done(null, user);
-            } catch (err) {
-                return done(err, null);
-            }
-        }
-    )
-);
-
-passport.serializeUser((user, done) => {
-    done(null, user.id);
-});
-
-passport.deserializeUser(async (id, done) => {
+// Routes
+app.get('/get-reminders/:userId', async (req, res) => {
     try {
-        const user = await User.findById(id);
-        done(null, user);
-    } catch (err) {
-        done(err, null);
+        const user = await User.findById(req.params.userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        res.json(user.reminders);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch reminders' });
     }
 });
+
+
+app.post('/add-reminder', async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const { medicineName, dosage, time } = req.body;
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        user.reminders.push({ medicineName, dosage, time });
+        await user.save();
+
+        res.status(201).json({ message: "Reminder added successfully!" });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to save reminder' });
+    }
+});
+
+app.delete('/delete-reminder/:userId/:reminderId', async (req, res) => {
+    try {
+        const { userId, reminderId } = req.params;
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        user.reminders = user.reminders.filter(reminder => reminder._id.toString() !== reminderId);
+        await user.save();
+
+        res.json({ message: 'Reminder deleted' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete reminder' });
+    }
+});
+
+
+app.post("/api/update-phone", async (req, res) => {
+    try {
+        const { userId, phone } = req.body;
+
+        if (!userId || !phone.match(/^\d{10}$/)) {
+            return res.status(400).json({ error: "Invalid input" });
+        }
+
+        await User.findByIdAndUpdate(userId, { phone });
+
+        res.json({ message: "Phone number updated successfully!" });
+    } catch (error) {
+        console.error("Server error:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 app.get("/api/user", async (req, res) => {
     try {
         const userId = req.user.id; // Assuming authentication is used
@@ -100,30 +143,7 @@ app.get("/api/user", async (req, res) => {
     }
 });
 
-app.post("/api/ask-gemini", async (req, res) => {
-    res.header("Access-Control-Allow-Origin", "http://localhost:5173");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    try {
-        const { question } = req.body;
-        if (!question) return res.status(400).json({ error: "Question is required" });
-        const prompt1 = `${question} + " recommend only two medicine drug name, nothing more"`;
-        const result1 = await model.generateContent(prompt1);
-        const response1 = result1.response.text();
-        
-        const prompt2 = `${question} + " recommend this to do in this situation: resting or going for a walk daily or any other activity, nothing more"`;
-        const result2 = await model.generateContent(prompt2);
-        const response2 = result2.response.text(); 
-        
-        res.json({ response1, response2 });
-        
-    } catch (error) {
-        console.error("❌ Error generating response:", error);
-        res.status(500).json({ error: "Error fetching AI response" });
-    }
-});
-
+// Cron Job to Send SMS 1 Minute Before Reminder Time
 cron.schedule("* * * * *", async () => {
     try {
       const now = new Date();
@@ -166,6 +186,89 @@ cron.schedule("* * * * *", async () => {
   });
   
 
+
+  
+  
+// ✅ Google OAuth Setup
+passport.use(
+    new GoogleStrategy(
+        {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: "http://localhost:8000/auth/google/callback", // Fixed callback URL
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            try {
+                let user = await User.findOne({ email: profile.emails[0].value });
+                if (!user) {
+                    user = new User({
+                        name: profile.displayName,
+                        email: profile.emails[0].value,
+                        search_history: []
+                    });
+                    await user.save();
+                }
+                return done(null, user);
+            } catch (err) {
+                return done(err, null);
+            }
+        }
+    )
+);
+
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await User.findById(id);
+        done(null, user);
+    } catch (err) {
+        done(err, null);
+    }
+});
+
+// ✅ AI Response Route (Ask Gemini)
+app.post("/api/ask-gemini", async (req, res) => {
+    res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    try {
+        const { question } = req.body;
+        if (!question) return res.status(400).json({ error: "Question is required" });
+        const prompt1 = `${question} + " recommend only two medicine drug name, nothing more"`;
+        const result1 = await model.generateContent(prompt1);
+        const response1 = result1.response.text();
+        
+        const prompt2 = `${question} + " recommend this to do in this situation: resting or going for a walk daily or any other activity, nothing more"`;
+        const result2 = await model.generateContent(prompt2);
+        const response2 = result2.response.text(); 
+        
+        res.json({ response1, response2 });
+        
+    } catch (error) {
+        console.error("❌ Error generating response:", error);
+        res.status(500).json({ error: "Error fetching AI response" });
+    }
+});
+
+// ✅ Redirect Routes
+app.get("/", (req, res) => {
+    res.send("hello");
+});
+
+app.get("/dashboard", (req, res) => {
+    res.redirect("http://localhost:5173/dashboard");
+});
+
+app.get("/profile", (req, res) => {
+    res.redirect("http://localhost:5173/profile");
+});
+
+
+// ✅ Google Auth Routes
 app.get("/auth/google",
     passport.authenticate("google", { scope: ["profile", "email"] })
 );
@@ -194,20 +297,7 @@ app.get(
 app.get("/auth/user", (req, res) => {
     res.send(req.user || null);
 });
-
-
-app.get("/", (req, res) => {
-    res.send("hello");
+// ✅ Start Server
+app.listen(8000, () => {
+    console.log("🚀 Server running on port 8000");
 });
-
-app.get("/dashboard", (req, res) => {
-    res.redirect("http://localhost:5173/dashboard");
-});
-
-app.get("/profile", (req, res) => {
-    res.redirect("http://localhost:5173/profile");
-});
-
-app.listen(8000,(req,res)=>{
-    console.log("server started");
-})
