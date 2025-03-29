@@ -8,6 +8,7 @@ import Setnumber from './Components/Setnumber'
 import All_Doc from './Components/All_Doc';
 import Doctor_Login from './Components/Doctor_Login';
 import Doc_Dashboard from './Components/Doc_Dashboard';
+import Chatinterface from './Components/Chatinterface';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -22,6 +23,7 @@ function App() {
         <Route path="/alldoctor" element={<All_Doc/>}  />
         <Route path="/doclogin" element={<Doctor_Login/>} />
         <Route path="/docdash" element={<Doc_Dashboard/>} />
+        <Route path="/chat" element={<Chatinterface/>} />
       </Routes>
     </Router>
   )
