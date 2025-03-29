@@ -5,6 +5,7 @@ import Landing_page from './Components/Landing_page'
 import Dashboard from './Components/Dashboard';
 import Medicine_Reminder from './Components/Medicine_Reminder';
 import Setnumber from './Components/Setnumber'
+import All_Doc from './Components/All_Doc';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -16,6 +17,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/Medicine_Reminder" element={<Medicine_Reminder />} />
         <Route path="/setnumber" element={<Setnumber />} />
+        <Route path="/alldoctor" element={<All_Doc/>}  />
       </Routes>
     </Router>
   )

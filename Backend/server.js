@@ -235,19 +235,30 @@ app.post("/api/ask-gemini", async (req, res) => {
     res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
     try {
         const { question } = req.body;
         if (!question) return res.status(400).json({ error: "Question is required" });
-        const prompt1 = `${question} + " recommend only two medicine drug name, nothing more"`;
+
+        // Try to get the medicine recommendation
+        const prompt1 = `${question} + " recommend only two medicine drug names, nothing more"`;
         const result1 = await model.generateContent(prompt1);
-        const response1 = result1.response.text();
-        
-        const prompt2 = `${question} + " recommend this to do in this situation: resting or going for a walk daily or any other activity, nothing more"`;
+        const response1 = await result1.response.text();
+
+        // Try to get the activity recommendation
+        const prompt2 = `${question} + " recommend an activity to do in this situation: resting, walking, or another suitable activity, nothing more"`;
         const result2 = await model.generateContent(prompt2);
-        const response2 = result2.response.text(); 
-        
-        res.json({ response1, response2 });
-        
+        const response2 = await result2.response.text(); 
+
+        // Consider it risky if medicine response is empty or non-informative
+        const isRisky = !response1 || response1.trim().length < 5 || response1.toLowerCase().includes("cannot") || response1.toLowerCase().includes("unsure") || response1.toLowerCase().includes("not");
+
+        if (isRisky) {
+            return res.json({ risky: true });
+        } else {
+            return res.json({ risky: false, response1, response2 });
+        }
+
     } catch (error) {
         console.error("❌ Error generating response:", error);
         res.status(500).json({ error: "Error fetching AI response" });
