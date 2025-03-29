@@ -26,6 +26,14 @@ app.use(cors({
     methods: "GET,POST,PUT,DELETE",
     allowedHeaders: "Content-Type,Authorization"
 }));
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -38,6 +46,59 @@ mongoose.connect(process.env.MONGO_URI, {
 
 
 // ✅ Redirect Routes
+passport.use(
+    new GoogleStrategy(
+        {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: "http://localhost:8000/auth/google/callback", // Fixed callback URL
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            try {
+                let user = await User.findOne({ email: profile.emails[0].value });
+                if (!user) {
+                    user = new User({
+                        name: profile.displayName,
+                        email: profile.emails[0].value,
+                        search_history: []
+                    });
+                    await user.save();
+                }
+                return done(null, user);
+            } catch (err) {
+                return done(err, null);
+            }
+        }
+    )
+);
+
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await User.findById(id);
+        done(null, user);
+    } catch (err) {
+        done(err, null);
+    }
+});
+app.get("/api/user", async (req, res) => {
+    try {
+        const userId = req.user.id; // Assuming authentication is used
+        const user = await User.findById(userId).select("-password"); // Excluding password
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json(user);
+    } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
 
 app.post("/api/ask-gemini", async (req, res) => {
     res.header("Access-Control-Allow-Origin", "http://localhost:5173");
@@ -62,6 +123,36 @@ app.post("/api/ask-gemini", async (req, res) => {
         res.status(500).json({ error: "Error fetching AI response" });
     }
 });
+
+app.get("/auth/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+
+app.get(
+    "/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/" }),
+    async (req, res) => {
+        try {
+            const user = await User.findById(req.user.id);
+            if (user && user.phone) {
+                res.redirect("http://localhost:5173/dashboard");
+            } else {
+                res.redirect("http://localhost:5173/setnumber");
+            }
+        } catch (error) {
+            console.error("Error checking phone number:", error);
+            res.redirect("/");
+        }
+    }
+);
+
+
+
+app.get("/auth/user", (req, res) => {
+    res.send(req.user || null);
+});
+
 
 app.get("/", (req, res) => {
     res.send("hello");
