@@ -124,6 +124,48 @@ app.post("/api/ask-gemini", async (req, res) => {
     }
 });
 
+cron.schedule("* * * * *", async () => {
+    try {
+      const now = new Date();
+      const currentHour = now.getHours().toString().padStart(2, "0");
+      const currentMinute = now.getMinutes();
+  
+      // Generate three time slots for checking reminders
+      const timesToCheck = [
+        `${currentHour}:${(currentMinute + 5).toString().padStart(2, "0")}`, // 5 minutes before
+        `${currentHour}:${(currentMinute + 3).toString().padStart(2, "0")}`, // 3 minutes before
+        `${currentHour}:${(currentMinute + 1).toString().padStart(2, "0")}`, // 1 minute before
+      ];
+  
+      // Find users with reminders matching the timesToCheck
+      const users = await User.find({ "reminders.time": { $in: timesToCheck } });
+  
+      for (const user of users) {
+        if (!user.phone) {
+          console.error(`⚠️ User (${user._id}) has no phone number set.`);
+          continue;
+        }
+  
+        const remindersToSend = user.reminders.filter((reminder) =>
+          timesToCheck.includes(reminder.time)
+        );
+  
+        for (const reminder of remindersToSend) {
+          await twilioClient.messages.create({
+            body: `Reminder: Take your medicine '${reminder.medicineName}' (${reminder.dosage}).`,
+            from: twilioNumber,
+            to: `+91${user.phone}`,
+          });
+  
+          console.log(`📩 Reminder sent to ${user.phone}`);
+        }
+      }
+    } catch (error) {
+      console.error("❌ Cron Job Error:", error);
+    }
+  });
+  
+
 app.get("/auth/google",
     passport.authenticate("google", { scope: ["profile", "email"] })
 );
