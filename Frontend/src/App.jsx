@@ -14,7 +14,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing_page />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
         <Route path="/Medicine_Reminder" element={<Medicine_Reminder />} />
         <Route path="/setnumber" element={<Setnumber />} />
       </Routes>
