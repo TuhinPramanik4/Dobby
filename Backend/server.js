@@ -1,4 +1,15 @@
-import express from "express";
+import mongoose from 'mongoose';
+import express from 'express';
+import dotenv from 'dotenv';
+import passport from 'passport';
+import session from 'express-session';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import cookieParser from 'cookie-parser';
+import User from './models/User.js';
+import cors from "cors";
+import cron from 'node-cron';
+import twilio from 'twilio';
 
 const app = express();
 
