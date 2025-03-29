@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Send, Pill, Activity, Menu, CalendarDays, Stethoscope, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Send, Pill, Activity, Menu, CalendarDays, Stethoscope, CheckCircle, XCircle, Eye, X } from "lucide-react";
 import { motion } from "framer-motion";
+import { Dialog } from '@headlessui/react';
 
 const Dashboard = () => {
     const [question, setQuestion] = useState("");
@@ -10,6 +11,10 @@ const Dashboard = () => {
     const [submitted, setSubmitted] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [dateTime, setDateTime] = useState(new Date());
+
+    const [showForm, setShowForm] = useState(false);
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
+    const [patient, setPatient] = useState({ name: '', age: '', number: '', symptoms: '' });
 
     useEffect(() => {
         const timer = setInterval(() => setDateTime(new Date()), 1000);
@@ -61,6 +66,16 @@ const Dashboard = () => {
         }
     };
 
+    const openForm = (doc) => {
+        setSelectedDoctor(doc);
+        setShowForm(true);
+    };
+
+    const closeForm = () => {
+        setShowForm(false);
+        setPatient({ name: '', age: '', number: '', symptoms: '' });
+    };
+
     return (
         <div className="w-full h-screen flex flex-col bg-gradient-to-br from-blue-700 to-blue-400 overflow-auto">
 
@@ -100,9 +115,9 @@ const Dashboard = () => {
 
                         {/* See All Button */}
                         <div className="flex items-center justify-between mb-4 text-white">
-                            <h2 className="text-xl font-semibold flex items-center gap-2"><Stethoscope size={24}/> Our Doctors</h2>
+                            <h2 className="text-xl font-semibold flex items-center gap-2"><Stethoscope size={24} /> Our Doctors</h2>
                             <button onClick={() => window.location.href = "/alldoctor"} className="flex items-center gap-1 bg-white text-blue-600 px-3 py-1 rounded-lg text-sm font-semibold shadow-md hover:bg-gray-200 transition">
-                                <Eye size={16}/> See All
+                                <Eye size={16} /> See All
                             </button>
                         </div>
 
@@ -120,7 +135,7 @@ const Dashboard = () => {
                                         ) : (
                                             <span className="flex items-center text-red-400 font-semibold text-sm"><XCircle size={18} className="mr-1" />Unavailable</span>
                                         )}
-                                        <button className={`px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold shadow-md transition ${doc.available ? 'bg-white text-blue-600 hover:bg-gray-200' : 'bg-gray-400 text-white cursor-not-allowed'}`} disabled={!doc.available}>
+                                        <button onClick={() => doc.available && openForm(doc)} className={`px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold shadow-md transition ${doc.available ? 'bg-white text-blue-600 hover:bg-gray-200' : 'bg-gray-400 text-white cursor-not-allowed'}`} disabled={!doc.available}>
                                             Book
                                         </button>
                                     </div>
@@ -134,19 +149,16 @@ const Dashboard = () => {
                 {/* AI Responses */}
                 {(response1 || response2) && (
                     <motion.div className="flex flex-col md:flex-row gap-4 w-full max-w-5xl">
-
                         <motion.div className="bg-white/20 backdrop-blur-md p-4 rounded-2xl shadow-lg text-white text-base text-center border border-white/30 flex-1" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
                             <Pill size={28} className="mx-auto mb-1" />
                             <h2 className="text-lg font-semibold mb-1">Medicine to Take</h2>
                             <p className="text-sm sm:text-base">{response1}</p>
                         </motion.div>
-
                         <motion.div className="bg-white/20 backdrop-blur-md p-4 rounded-2xl shadow-lg text-white text-base text-center border border-white/30 flex-1" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
                             <Activity size={28} className="mx-auto mb-1" />
                             <h2 className="text-lg font-semibold mb-1">Activities to Do</h2>
                             <p className="text-sm sm:text-base">{response2}</p>
                         </motion.div>
-
                     </motion.div>
                 )}
 
@@ -167,6 +179,27 @@ const Dashboard = () => {
                 </div>
 
             </div>
+
+            {/* Booking Form Modal */}
+            {showForm && (
+                <Dialog open={showForm} onClose={closeForm} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md relative space-y-4">
+                        <button onClick={closeForm} className="absolute top-3 right-3 text-gray-500 hover:text-black"><X size={20} /></button>
+                        <h2 className="text-2xl font-semibold text-blue-600 text-center">Book Appointment</h2>
+                        <p className="text-center text-sm text-gray-600">Dr. {selectedDoctor?.name} ({selectedDoctor?.specialization})</p>
+                        <div className="space-y-2">
+                            <input type="text" placeholder="Patient Name" className="w-full p-2 border rounded" value={patient.name} onChange={(e) => setPatient({ ...patient, name: e.target.value })} />
+                            <input type="number" placeholder="Age" className="w-full p-2 border rounded" value={patient.age} onChange={(e) => setPatient({ ...patient, age: e.target.value })} />
+                            <input type="text" placeholder="Phone Number" className="w-full p-2 border rounded" value={patient.number} onChange={(e) => setPatient({ ...patient, number: e.target.value })} />
+                            <textarea placeholder="Symptoms" className="w-full p-2 border rounded" value={patient.symptoms} onChange={(e) => setPatient({ ...patient, symptoms: e.target.value })}></textarea>
+                        </div>
+                        <button className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition" onClick={() => { alert("Booking Submitted ✅\n\n" + JSON.stringify(patient, null, 2)); closeForm(); }}>
+                            Submit
+                        </button>
+                    </div>
+                </Dialog>
+            )}
+
         </div>
     );
 };
