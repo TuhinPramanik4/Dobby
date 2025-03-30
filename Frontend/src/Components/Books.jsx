@@ -43,69 +43,67 @@ export default function PatientForm() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-4 shadow-lg rounded-2xl bg-white">
-        <div className="p-4">
-          <h2 className="text-xl font-bold mb-4 text-center">Patient Form</h2>
-          {message && <p className="text-center text-green-600">{message}</p>}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="Your Name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border rounded-lg"
-            />
-            <input
-              type="tel"
-              name="mobile"
-              placeholder="Mobile Number"
-              value={formData.mobile}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border rounded-lg"
-            />
-            <input
-              type="number"
-              name="age"
-              placeholder="Age"
-              value={formData.age}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border rounded-lg"
-            />
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border rounded-lg"
-            >
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-            <textarea
-              name="symptoms"
-              placeholder="Describe your symptoms"
-              value={formData.symptoms}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border rounded-lg"
-            ></textarea>
-            <button
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-500 to-indigo-700">
+      <div className="backdrop-blur-lg bg-white/10 p-8 rounded-2xl shadow-lg border border-white/20 max-w-md w-full">
+        <h2 className="text-3xl font-bold text-white mb-6 text-center">Patient Form</h2>
+        {message && <p className="text-center text-green-300">{message}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            name="name"
+            placeholder="Your Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="w-full bg-transparent border border-white/30 p-3 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+          />
+          <input
+            type="tel"
+            name="mobile"
+            placeholder="Mobile Number"
+            value={formData.mobile}
+            onChange={handleChange}
+            required
+            className="w-full bg-transparent border border-white/30 p-3 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+          />
+          <input
+            type="number"
+            name="age"
+            placeholder="Age"
+            value={formData.age}
+            onChange={handleChange}
+            required
+            className="w-full bg-transparent border border-white/30 p-3 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+          />
+          <select
+            name="gender"
+            value={formData.gender}
+            onChange={handleChange}
+            required
+            className="w-full bg-transparent border border-white/30 p-3 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+          >
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+          <textarea
+            name="symptoms"
+            placeholder="Describe your symptoms"
+            value={formData.symptoms}
+            onChange={handleChange}
+            required
+            className="w-full bg-transparent border border-white/30 p-3 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+          ></textarea>
+          <button
             onClick={() => (window.location.href = "http://localhost:5173/dashboard")}
-              type="submit"
-              className="w-full p-2 bg-blue-500 text-white rounded-lg"
-              disabled={loading}
-            >
-              {loading ? "Submitting..." : "Submit"}
-            </button>
-          </form>
-        </div>
+            type="submit"
+            className="w-full bg-white/20 text-white p-3 rounded-lg hover:bg-white/30 transition-all duration-300"
+            disabled={loading}
+          >
+            {loading ? "Submitting..." : "Submit"}
+          </button>
+        </form>
       </div>
     </div>
   );
