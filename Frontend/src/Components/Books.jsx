@@ -21,7 +21,7 @@ export default function PatientForm() {
     setMessage("");
     
     try {
-      const response = await fetch("https://dobby-fbxy.onrender.com/api/patients", {
+      const response = await fetch("http://localhost:8000/api/patients", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

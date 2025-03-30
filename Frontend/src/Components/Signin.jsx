@@ -11,7 +11,7 @@ export default function Signin() {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-            const res = await axios.post('https://dobby-fbxy.onrender.com/api/signin', form);
+            const res = await axios.post('http://localhost:8000/api/signin', form);
             localStorage.setItem('token', res.data.token);
             alert('Signin successful');
             navigate('/profile');
