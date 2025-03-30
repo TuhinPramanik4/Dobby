@@ -44,7 +44,7 @@ app.use(cookieParser());
 
 // ✅ Fix CORS Issue
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: "https://dobby-coral.vercel.app/",
     credentials: true,
     methods: "GET,POST,PUT,DELETE",
     allowedHeaders: "Content-Type,Authorization"
@@ -307,7 +307,7 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: "http://localhost:8000/auth/google/callback", // Fixed callback URL
+            callbackURL: "https://dobby-fbxy.onrender.com/auth/google/callback", // Fixed callback URL
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
@@ -343,7 +343,7 @@ passport.deserializeUser(async (id, done) => {
 
 // ✅ AI Response Route (Ask Gemini)
 app.post("/api/ask-gemini", async (req, res) => {
-    res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+    res.header("Access-Control-Allow-Origin", "https://dobby-coral.vercel.app/");
     res.header("Access-Control-Allow-Credentials", "true");
     res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -404,9 +404,9 @@ app.get(
         try {
             const user = await User.findById(req.user.id);
             if (user && user.phone) {
-                res.redirect("http://localhost:5173/dashboard");
+                res.redirect("https://dobby-coral.vercel.app/dashboard");
             } else {
-                res.redirect("http://localhost:5173/setnumber");
+                res.redirect("https://dobby-coral.vercel.app/setnumber");
             }
         } catch (error) {
             console.error("Error checking phone number:", error);
