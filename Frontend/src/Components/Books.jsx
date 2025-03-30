@@ -97,6 +97,7 @@ export default function PatientForm() {
               className="w-full p-2 border rounded-lg"
             ></textarea>
             <button
+            onClick={() => (window.location.href = "http://localhost:5173/dashboard")}
               type="submit"
               className="w-full p-2 bg-blue-500 text-white rounded-lg"
               disabled={loading}
