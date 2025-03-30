@@ -73,12 +73,12 @@ export default function Profile() {
 
 
     return (
-        <div className="h-screen flex items-center bg-gradient-to-br from-blue-100 to-blue-300 p-8">
+        <div className="h-screen flex items-center text-white  bg-gradient-to-br from-blue-500 to-indigo-600 p-8">
             <div className="flex w-full gap-6 h-full">
-                <div className="w-1/3 bg-white bg-opacity-30 backdrop-blur-lg p-6 rounded-2xl shadow-lg border border-white/50 h-full">
-                    <h2 className="text-3xl font-bold text-blue-900 mb-4 text-center">Doctor Profile</h2>
+                <div className="w-1/3 bg-white/20 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-white/50 h-full">
+                    <h2 className="text-3xl font-bold text-white mb-4 text-center">Doctor Profile</h2>
                     {doctor ? (
-                        <div className="space-y-2 text-blue-800">
+                        <div className="space-y-2 text-white">
                             <p><strong>Name:</strong> {doctor.doctorName}</p>
                             <p><strong>Email:</strong> {doctor.email}</p>
                             <p><strong>Role:</strong> {doctor.role}</p>
@@ -88,12 +88,12 @@ export default function Profile() {
                     )}
                 </div>
 
-                <div className="w-2/3 bg-white bg-opacity-30 backdrop-blur-lg p-6 rounded-2xl shadow-lg border border-white/50 h-full overflow-y-auto">
-                    <h2 className="text-3xl font-bold text-blue-900 mb-4 text-center">Incoming Appointments</h2>
+                <div className="w-2/3 bg-white/20 backdrop-blur-md  p-6 rounded-2xl shadow-lg border border-white/50 h-full overflow-y-auto">
+                    <h2 className="text-3xl font-bold text-white mb-4 text-center">Incoming Appointments</h2>
                     <div className="space-y-4">
                         {appointments.length > 0 ? (
                             appointments.map((appointment, index) => (
-                                <div key={index} className="p-4 bg-white bg-opacity-60 rounded-lg shadow-md border border-white/50">
+                                <div key={index} className="p-4 bg-white/20 backdrop-blur-md text-white bg-opacity-60 rounded-lg shadow-md border border-white/50">
                                     <p><strong>Patient Name:</strong> {appointment.name}</p>
                                     <p><strong>Age:</strong> {appointment.age}</p>
                                     <p><strong>Gender:</strong> {appointment.gender}</p>
@@ -108,7 +108,7 @@ export default function Profile() {
                                         </button>
                                         <button
                                             className="bg-green-500 text-white px-4 py-2 rounded-lg"
-                                
+                                            onClick={() => handleDelete(appointment._id)}
                                         >
                                             Join conversation
                                         </button>
@@ -118,7 +118,7 @@ export default function Profile() {
                                 </div>
                             ))
                         ) : (
-                            <p className="text-center text-gray-700">No appointments available.</p>
+                            <p className="text-center text-white">No appointments available.</p>
                         )}
                     </div>
                 </div>
