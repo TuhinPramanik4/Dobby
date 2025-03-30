@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 function LandingPageHome() {
   const handleLogin = () => {
-    window.open("http://localhost:8000/auth/google", "_self");
+    window.open("https://dobby-fbxy.onrender.com/auth/google", "_self");
   };
 
   return (

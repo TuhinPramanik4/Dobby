@@ -11,7 +11,7 @@ export default function Profile() {
         const fetchProfile = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('http://localhost:8000/api/profile', {
+                const res = await axios.get('https://dobby-fbxy.onrender.com/api/profile', {
                     headers: { Authorization: token }
                 });
                 setDoctor(res.data);
@@ -24,7 +24,7 @@ export default function Profile() {
         const fetchAppointments = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('http://localhost:8000/api/patients', {
+                const res = await axios.get('https://dobby-fbxy.onrender.com/api/patients', {
                     headers: { Authorization: token }
                 });
                 setAppointments(res.data);
@@ -49,7 +49,7 @@ export default function Profile() {
     const handleDelete = async (id) => {
         try {
             const token = localStorage.getItem('token'); // Retrieve token for authentication
-            const response = await fetch(`http://localhost:8000/api/patients/${id}`, {
+            const response = await fetch(`https://dobby-fbxy.onrender.com/api/patients/${id}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: token,

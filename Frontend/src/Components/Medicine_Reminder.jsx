@@ -16,7 +16,7 @@ const MedicineReminders = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/auth/user', { withCredentials: true });
+        const response = await axios.get('https://dobby-fbxy.onrender.com/auth/user', { withCredentials: true });
         setUserId(response.data._id);
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -33,7 +33,7 @@ const MedicineReminders = () => {
 
   const fetchReminders = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/get-reminders/${userId}`, { withCredentials: true });
+      const response = await axios.get(`https://dobby-fbxy.onrender.com/get-reminders/${userId}`, { withCredentials: true });
       setReminders(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching reminders:', error);
@@ -58,7 +58,7 @@ const MedicineReminders = () => {
     const newReminder = { userId, medicineName, dosage, time };
 
     try {
-      const response = await axios.post('http://localhost:8000/add-reminder', newReminder, { withCredentials: true });
+      const response = await axios.post('https://dobby-fbxy.onrender.com/add-reminder', newReminder, { withCredentials: true });
       alert(response.data.message);
       setActiveTab('myReminders');
       resetForm();
@@ -82,7 +82,7 @@ const MedicineReminders = () => {
 
   const handleDeleteReminder = async (reminderId) => {
     try {
-      await axios.delete(`http://localhost:8000/delete-reminder/${userId}/${reminderId}`, { withCredentials: true });
+      await axios.delete(`https://dobby-fbxy.onrender.com/delete-reminder/${userId}/${reminderId}`, { withCredentials: true });
       fetchReminders();
     } catch (error) {
       console.error('Error deleting reminder:', error);

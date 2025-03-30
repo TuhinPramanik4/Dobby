@@ -11,7 +11,7 @@ export default function Signup() {
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:8000/api/signup', form);
+            await axios.post('https://dobby-fbxy.onrender.com/api/signup', form);
             alert('Signup successful');
             navigate('/signin');
         } catch (err) {

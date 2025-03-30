@@ -9,7 +9,7 @@ const SetNumber = () => {
     // Function to fetch user ID
     const fetchUserId = async () => {
         try {
-            const res = await fetch("http://localhost:8000/auth/user", { credentials: "include" });
+            const res = await fetch("https://dobby-fbxy.onrender.com/auth/user", { credentials: "include" });
             const user = await res.json();
             return user?._id || null; // Ensure we return the user ID
         } catch (err) {
@@ -34,7 +34,7 @@ const SetNumber = () => {
                 return;
             }
 
-            const res = await fetch("http://localhost:8000/api/update-phone", {
+            const res = await fetch("https://dobby-fbxy.onrender.com/api/update-phone", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
